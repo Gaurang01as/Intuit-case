@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IES — Sundial Bakehouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2545; --navy-2:#12345F; --green:#2CA01C; --green-soft:#E4F5E1;
+  --paper:#F7F8FA; --panel:#FFFFFF; --line:#E4E7EC; --ink:#101828; --muted:#6B7280;
+  --amber:#B7791F; --amber-soft:#FCF1DC;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;}
+.serif{font-family:'Source Serif 4',serif;}
+body{padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+.app{display:flex; min-height:100vh;}
+
+/* Sidebar */
+.side{width:210px; background:var(--navy); color:#D7E3F4; flex-shrink:0; display:flex; flex-direction:column; padding:20px 14px;}
+.brand{display:flex; align-items:center; gap:8px; padding:6px 8px 22px; font-weight:800; font-size:15px; color:#fff;}
+.brand .dot{width:9px; height:9px; border-radius:50%; background:var(--green);}
+.nav-item{display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:9px; font-size:13.5px; font-weight:600; cursor:pointer; color:#B9C9E0;}
+.nav-item.active{background:var(--navy-2); color:#fff;}
+.nav-item svg{width:17px; height:17px; flex-shrink:0;}
+.side-foot{margin-top:auto; padding:12px; font-size:11.5px; color:#7C90AD; line-height:1.5;}
+
+/* Main */
+.main{flex:1; min-width:0;}
+.topbar{display:flex; justify-content:space-between; align-items:center; padding:18px 32px; border-bottom:1px solid var(--line); background:var(--panel);}
+.topbar h1{font-size:18px; margin:0;}
+.org{font-size:12.5px; color:var(--muted); font-weight:600;}
+.avatar{width:34px; height:34px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;}
+
+.screen{display:none; padding:28px 32px 48px;}
+.screen.active{display:block;}
+
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:22px;}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;}
+.stat-label{font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+.stat-num{font-size:26px; margin:6px 0 2px;}
+.stat-sub{font-size:12.5px; color:var(--muted);}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px;}
+.badge.auto{background:var(--green-soft); color:var(--green);}
+.badge.assist{background:var(--amber-soft); color:var(--amber);}
+.badge.human{background:#FDEAEA; color:#B4272B;}
+
+.card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px;}
+.card-hd{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+.card-hd h3{font-size:14.5px; margin:0;}
+
+.insight-card{border-left:3px solid var(--green);}
+.insight-title{font-weight:700; font-size:14.5px; margin:0 0 6px;}
+.insight-body{font-size:13.5px; color:#374151; line-height:1.55; margin:0 0 12px;}
+.insight-actions{display:flex; gap:8px;}
+.btn{border:none; border-radius:9px; padding:9px 15px; font-weight:700; font-size:13px; cursor:pointer; font-family:'Inter',sans-serif;}
+.btn-green{background:var(--green); color:#fff;}
+.btn-outline{background:#fff; border:1px solid var(--line); color:var(--ink);}
+
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{text-align:left; color:var(--muted); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--line);}
+td{padding:11px 10px; border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+
+/* Agent chat */
+.chat-shell{max-width:640px;}
+.chat-wrap{display:flex; flex-direction:column; gap:14px; margin-bottom:16px;}
+.msg{max-width:82%; padding:13px 15px; border-radius:14px; font-size:13.5px; line-height:1.55;}
+.msg.bot{background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px;}
+.msg.user{background:var(--navy); color:#fff; border-bottom-right-radius:4px; margin-left:auto;}
+.forecast-box{border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:10px; background:var(--paper);}
+.forecast-row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px dashed var(--line);}
+.forecast-row:last-child{border-bottom:none; font-weight:700;}
+.chat-actions{display:flex; gap:8px; margin-top:8px;}
+.suggest{background:#fff; border:1px solid var(--line); border-radius:100px; padding:8px 13px; font-size:12.5px; font-weight:700; cursor:pointer;}
+
+/* Handoff */
+.handoff-card{border:1px solid #F2D2A0; background:var(--amber-soft); border-radius:14px; padding:20px; margin-bottom:16px;}
+.expert-card{display:flex; gap:14px; align-items:center; background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:14px;}
+.expert-av{width:42px; height:42px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;}
+
+/* Dev */
+.code-box{background:#0B1220; color:#CBE6D5; font-family:ui-monospace,monospace; font-size:12.5px; border-radius:12px; padding:16px; line-height:1.6; overflow-x:auto;}
+.code-box .k{color:#7EC8E3;} .code-box .s{color:#F2C879;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="dot"></span>Intuit Enterprise Suite</div>
+    <div class="nav-item active" data-tab="dashboard" onclick="goTab('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Dashboard</div>
+    <div class="nav-item" data-tab="agent" onclick="goTab('agent')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013 11.5 8.5 8.5 0 0111.5 3a8.5 8.5 0 019.5 8.5z"/></svg>AI Agent</div>
+    <div class="nav-item" data-tab="handoff" onclick="goTab('handoff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Expert handoff</div>
+    <div class="nav-item" data-tab="dev" onclick="goTab('dev')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg>Developer API</div>
+    <div class="side-foot">Sundial Bakehouse<br>6 locations · Multi-state payroll</div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="screen active">
+      <div class="topbar"><h1>Finance dashboard</h1><div style="display:flex;align-items:center;gap:12px;"><span class="org">Sundial Bakehouse</span><div class="avatar">P</div></div></div>
+      <div class="screen">
+        <div class="grid3">
+          <div class="stat"><div class="stat-label">Books status</div><div class="stat-num serif">Closed</div><div class="stat-sub">Aug closed automatically, 6:02am</div></div>
+          <div class="stat"><div class="stat-label">Cash on hand</div><div class="stat-num serif">$182,400</div><div class="stat-sub">+4.1% vs last month</div></div>
+          <div class="stat"><div class="stat-label">Open items</div><div class="stat-num serif">3</div><div class="stat-sub">1 needs your review</div></div>
+        </div>
+
+        <div class="card insight-card">
+          <span class="badge auto">● Automated</span>
+          <p class="insight-title" style="margin-top:10px;">August books closed — no review needed</p>
+          <p class="insight-body">The agent reconciled 1,142 transactions across 6 locations, matched all bank feeds, and flagged zero exceptions. Payroll tax for your new Nevada location was categorized correctly on the first pass.</p>
+          <div class="insight-actions"><button class="btn btn-outline">View close summary</button></div>
+        </div>
+
+        <div class="card insight-card" style="border-left-color:var(--amber);">
+          <span class="badge assist">● Assisted — needs your review</span>
+          <p class="insight-title" style="margin-top:10px;">Q4 cash flow forecast is ready to review</p>
+          <p class="insight-body">Based on seasonal sales patterns from the last 2 years, the agent drafted a Q4 forecast. Holiday catering revenue is the biggest swing factor — worth a look before it's finalized.</p>
+          <div class="insight-actions"><button class="btn btn-green" onclick="goTab('agent')">Review with agent</button></div>
+        </div>
+
+        <div class="card handoff-card" style="margin-bottom:0;">
+          <span class="badge human">● Needs a human expert</span>
+          <p class="insight-title" style="margin-top:10px;">Multi-state tax question flagged</p>
+          <p class="insight-body" style="margin-bottom:0;">Opening the Nevada location changes your nexus for sales tax. The agent isn't confident enough to file this on its own and has queued it for a licensed tax expert.</p>
+          <div class="insight-actions" style="margin-top:12px;"><button class="btn btn-outline" onclick="goTab('handoff')">See handoff</button></div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-hd"><h3>Recent activity</h3></div>
+          <table>
+            <tr><th>Item</th><th>Type</th><th>Status</th></tr>
+            <tr><td>August month-end close</td><td><span class="badge auto">Automated</span></td><td>Closed</td></tr>
+            <tr><td>Q4 cash flow forecast</td><td><span class="badge assist">Assisted</span></td><td>Awaiting your review</td></tr>
+            <tr><td>NV sales tax nexus</td><td><span class="badge human">Human handoff</span></td><td>With tax expert</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENT CHAT -->
+    <section id="agent" class="screen">
+      <div class="topbar"><h1>AI Agent — Cash flow forecast</h1><div class="avatar">P</div></div>
+      <div class="screen">
+        <div class="chat-shell">
+          <div class="chat-wrap" id="chatWrap">
+            <div class="msg bot">I drafted your Q4 forecast using the last two years of seasonal sales, your current payroll run-rate, and known lease costs. Here's the summary — want me to walk through what's driving it?</div>
+            <div class="msg bot">
+              <div class="forecast-box">
+                <div class="forecast-row"><span>Projected revenue</span><span>$612,000</span></div>
+                <div class="forecast-row"><span>Projected expenses</span><span>$487,300</span></div>
+                <div class="forecast-row"><span>Net cash flow</span><span>$124,700</span></div>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="suggest" onclick="agentReply(this,'What is driving the increase?')">What's driving the increase?</button>
+              <button class="suggest" onclick="agentReply(this,'Adjust holiday catering estimate')">Adjust holiday catering estimate</button>
+              <button class="suggest" onclick="agentReply(this,'Approve forecast')">Approve forecast</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HANDOFF -->
+    <section id="handoff" class="screen">
+      <div class="topbar"><h1>Expert handoff</h1><div class="avatar">P</div></div>
+      <div class="screen">
+        <div class="card handoff-card">
+          <span class="badge human">● Handed off to a human</span>
+          <p class="insight-title" style="margin-top:10px;">Multi-state sales tax nexus — Nevada</p>
+          <p class="insight-body" style="margin-bottom:0;">Opening a location in a new state can change where you owe sales tax, and the rules vary enough that the agent isn't confident giving a final answer. Rather than guess, it routed this straight to a licensed expert inside IES — no need to call an outside accountant.</p>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Assigned expert</h3></div>
+          <div class="expert-card">
+            <div class="expert-av">DL</div>
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:14px;">Dana Lin, CPA</div>
+              <div style="font-size:12.5px; color:var(--muted);">Multi-state tax specialist · Responds within 1 business day</div>
+            </div>
+            <button class="btn btn-outline">Message</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>What happens next</h3></div>
+          <table>
+            <tr><th>Step</th><th>Status</th></tr>
+            <tr><td>Agent flagged the nexus change</td><td>Done</td></tr>
+            <tr><td>Routed to tax specialist</td><td>Done</td></tr>
+            <tr><td>Expert reviews & files guidance</td><td>In progress</td></tr>
+            <tr><td>Agent applies the ruling going forward</td><td>Queued</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEV -->
+    <section id="dev" class="screen">
+      <div class="topbar"><h1>Developer API</h1><div class="avatar">P</div></div>
+      <div class="screen">
+        <div class="card">
+          <div class="card-hd"><h3>Build on IES data</h3></div>
+          <p class="insight-body">Every automated, assisted, and human-reviewed action in IES is available as an event your app can subscribe to — so a bakery POS system, a payroll add-on, or a lending tool can react the moment the books close.</p>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Example: subscribe to close events</h3></div>
+          <div class="code-box">
+GET <span class="s">/v1/companies/sundial-bakehouse/events</span><br>
+<span class="k">Authorization:</span> Bearer &lt;token&gt;<br><br>
+{<br>
+&nbsp;&nbsp;<span class="k">"event"</span>: <span class="s">"books.closed"</span>,<br>
+&nbsp;&nbsp;<span class="k">"period"</span>: <span class="s">"2026-08"</span>,<br>
+&nbsp;&nbsp;<span class="k">"mode"</span>: <span class="s">"automated"</span>,<br>
+&nbsp;&nbsp;<span class="k">"exceptions"</span>: 0<br>
+}
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-hd"><h3>Available scopes</h3></div>
+          <table>
+            <tr><th>Scope</th><th>Access</th><th>Mode</th></tr>
+            <tr><td>books.read</td><td>Read closed & draft books</td><td><span class="badge auto">Auto</span></td></tr>
+            <tr><td>forecast.read</td><td>Read AI-drafted forecasts</td><td><span class="badge assist">Assist</span></td></tr>
+            <tr><td>expert.request</td><td>Trigger a human expert handoff</td><td><span class="badge human">Human</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+function goTab(name){
+  document.querySelectorAll('.app > main > .screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.tab===name));
+}
+function agentReply(btn, text){
+  const wrap = document.getElementById('chatWrap');
+  btn.parentElement.remove();
+  const u = document.createElement('div'); u.className='msg user'; u.textContent=text; wrap.appendChild(u);
+  setTimeout(()=>{
+    const b = document.createElement('div'); b.className='msg bot';
+    let reply = "Locked in — I'll apply this forecast and flag any variance over 8% next month.";
+    if(text.includes('driving')) reply = "Mainly holiday catering orders, which ran 22% above baseline the last two Novembers, plus the Nevada location ramping to full staffing by October.";
+    if(text.includes('catering')) reply = "Got it — tell me a rough number or range, and I'll rebuild the forecast around it.";
+    b.textContent = reply; wrap.appendChild(b);
+    wrap.scrollTop = wrap.scrollHeight;
+  }, 500);
+}
+</script>
+</body>
+</html>
