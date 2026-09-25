@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flow — money, understood</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1F1C; --paper:#F6F4EF; --panel:#FFFFFF;
+  --teal:#0F3D3E; --teal-2:#175C57; --gold:#B8862E; --gold-soft:#EFDFB8;
+  --line:#E3DED2; --muted:#6C7570; --good:#2F6E4E; --bad:#A6432F;
+  --radius:20px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--ink);height:100%;}
+body{
+  font-family:'Manrope',sans-serif; color:var(--ink);
+  display:flex; align-items:center; justify-content:center; min-height:100%;
+  padding:24px; padding-top:calc(24px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+}
+.serif{font-family:'Fraunces',serif;}
+.phone{
+  width:390px; max-width:100%; height:800px; max-height:92vh;
+  background:var(--paper); border-radius:44px; overflow:hidden; position:relative;
+  box-shadow:0 40px 80px rgba(0,0,0,.5), 0 0 0 10px #05100E;
+  display:flex; flex-direction:column;
+}
+.screen{flex:1; overflow-y:auto; display:none; padding:28px 24px 16px;}
+.screen.active{display:block;}
+.screen::-webkit-scrollbar{display:none;}
+
+/* ---- Onboarding ---- */
+#onboarding{display:none; background:var(--teal); color:var(--paper); padding:0;}
+#onboarding.active{display:flex; flex-direction:column;}
+.ob-step{flex:1; display:none; flex-direction:column; justify-content:center; padding:36px 30px;}
+.ob-step.active{display:flex;}
+.ob-eyebrow{color:var(--gold-soft); font-weight:600; font-size:13px; letter-spacing:.02em;}
+.ob-head{font-size:34px; line-height:1.15; margin:14px 0 12px;}
+.ob-sub{color:#CFE0DB; font-size:15px; line-height:1.55; max-width:30ch;}
+.ob-dots{display:flex; gap:6px; padding:0 30px 8px;}
+.ob-dot{height:4px; flex:1; background:rgba(255,255,255,.2); border-radius:2px; overflow:hidden;}
+.ob-dot i{display:block; height:100%; width:0; background:var(--gold-soft);}
+.ob-dot.done i{width:100%;}
+.ob-foot{padding:20px 30px calc(28px + env(safe-area-inset-bottom,0px));}
+.chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+.chip{border:1px solid rgba(255,255,255,.3); color:var(--paper); padding:9px 14px; border-radius:100px; font-size:13.5px; font-weight:600; cursor:pointer; background:transparent;}
+.chip.sel{background:var(--gold-soft); color:var(--teal); border-color:var(--gold-soft);}
+
+/* ---- Buttons ---- */
+.btn{
+  display:block; width:100%; text-align:center; border:none; border-radius:14px;
+  padding:16px; font-family:'Manrope',sans-serif; font-weight:700; font-size:15.5px;
+  cursor:pointer; letter-spacing:.01em;
+}
+.btn-gold{background:var(--gold-soft); color:var(--teal);}
+.btn-dark{background:var(--teal); color:var(--paper);}
+.btn-ghost{background:transparent; color:var(--paper); text-decoration:underline; font-weight:600; padding:10px;}
+.btn-ghost.dark{color:var(--teal);}
+
+/* ---- Header / nav ---- */
+.hd{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;}
+.hd h1{font-size:22px; margin:0;}
+.avatar{width:38px; height:38px; border-radius:50%; background:var(--teal); color:var(--gold-soft); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;}
+.greet{color:var(--muted); font-size:13.5px; margin:0 0 2px;}
+
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+.balance-card{background:var(--teal); color:var(--paper); border:none;}
+.balance-label{color:#B9D3CD; font-size:13px; font-weight:600;}
+.balance-num{font-size:40px; margin:6px 0 2px;}
+.balance-sub{color:#CFE0DB; font-size:13px;}
+.trend{display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; padding:4px 9px; border-radius:100px; margin-top:12px;}
+.trend.up{background:rgba(184,134,46,.25); color:var(--gold-soft);}
+
+.row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+.row:last-child{border-bottom:none;}
+.tx-left{display:flex; align-items:center; gap:12px;}
+.tx-icon{width:38px; height:38px; border-radius:11px; background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+.tx-name{font-weight:700; font-size:14.5px; margin:0;}
+.tx-meta{color:var(--muted); font-size:12.5px; margin:1px 0 0;}
+.tx-amt{font-weight:700; font-size:14.5px;}
+.tx-amt.pos{color:var(--good);}
+
+.section-title{font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 0 10px;}
+
+/* Insights */
+.bar-wrap{display:flex; align-items:flex-end; gap:10px; height:150px; padding:10px 4px 0;}
+.bar-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; justify-content:flex-end; height:100%;}
+.bar{width:100%; border-radius:8px 8px 3px 3px; background:var(--line);}
+.bar.active{background:var(--teal);}
+.bar-lbl{font-size:11px; color:var(--muted); font-weight:600;}
+.cat-row{display:flex; align-items:center; gap:12px; padding:11px 0;}
+.cat-dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+.cat-bar-track{flex:1; height:7px; background:var(--paper); border-radius:4px; overflow:hidden;}
+.cat-bar-fill{height:100%; border-radius:4px;}
+.cat-name{font-size:13.5px; font-weight:700; width:88px; flex-shrink:0;}
+.cat-amt{font-size:13px; color:var(--muted); width:54px; text-align:right; flex-shrink:0;}
+.insight-note{background:var(--gold-soft); border-radius:16px; padding:16px; font-size:13.5px; line-height:1.5; color:var(--teal); font-weight:600;}
+
+/* Goals */
+.goal-card{border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:14px;}
+.goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+.goal-name{font-weight:800; font-size:15.5px;}
+.goal-pct{font-size:13px; color:var(--gold); font-weight:800;}
+.goal-track{height:9px; background:var(--paper); border-radius:5px; overflow:hidden; margin-bottom:8px;}
+.goal-fill{height:100%; background:var(--gold); border-radius:5px;}
+.goal-nums{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted);}
+.add-goal{border:1.5px dashed var(--line); border-radius:18px; padding:18px; text-align:center; color:var(--muted); font-weight:700; font-size:14px; cursor:pointer;}
+
+/* Coach */
+.chat-wrap{display:flex; flex-direction:column; gap:12px; padding-bottom:10px;}
+.msg{max-width:80%; padding:12px 14px; border-radius:16px; font-size:14px; line-height:1.5;}
+.msg.bot{background:var(--panel); border:1px solid var(--line); border-bottom-left-radius:4px; align-self:flex-start;}
+.msg.user{background:var(--teal); color:var(--paper); border-bottom-right-radius:4px; align-self:flex-end;}
+.suggest-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
+.suggest{background:var(--panel); border:1px solid var(--line); border-radius:100px; padding:9px 13px; font-size:12.5px; font-weight:700; cursor:pointer; color:var(--teal);}
+
+/* Bottom nav */
+.tabbar{display:flex; border-top:1px solid var(--line); background:var(--panel); padding:10px 6px calc(12px + env(safe-area-inset-bottom,0px));}
+.tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--muted); font-size:10.5px; font-weight:700; cursor:pointer; padding:4px;}
+.tab.active{color:var(--teal);}
+.tab svg{width:21px; height:21px;}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- ONBOARDING -->
+  <section id="onboarding" class="screen active">
+    <div class="ob-dots">
+      <div class="ob-dot done" data-dot="0"><i></i></div>
+      <div class="ob-dot" data-dot="1"><i></i></div>
+      <div class="ob-dot" data-dot="2"><i></i></div>
+    </div>
+
+    <div class="ob-step active" data-step="0">
+      <div class="ob-eyebrow">Flow</div>
+      <div class="ob-head serif">Money, without the guesswork.</div>
+      <div class="ob-sub">Flow reads your spending, learns your patterns, and tells you what to do next — in plain language.</div>
+    </div>
+
+    <div class="ob-step" data-step="1">
+      <div class="ob-eyebrow">A quick question</div>
+      <div class="ob-head serif">What are you working toward?</div>
+      <div class="ob-sub">Pick as many as apply. This shapes what Flow watches for you.</div>
+      <div class="chip-row" id="goalChips">
+        <button class="chip" data-chip>Build an emergency fund</button>
+        <button class="chip" data-chip>Pay off debt faster</button>
+        <button class="chip" data-chip>Save for a trip</button>
+        <button class="chip" data-chip>Just see where money goes</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="2">
+      <div class="ob-eyebrow">Almost there</div>
+      <div class="ob-head serif">Connect an account.</div>
+      <div class="ob-sub">This prototype uses sample data — tap continue to see it in action.</div>
+      <div class="card" style="margin-top:20px; background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); color:var(--paper);">
+        <div style="font-weight:700; font-size:14.5px;">🏦 Cedar Community Bank</div>
+        <div style="color:#CFE0DB; font-size:13px; margin-top:4px;">Checking · Savings · Credit card</div>
+      </div>
+    </div>
+
+    <div class="ob-foot">
+      <button class="btn btn-gold" id="obNext">Continue</button>
+      <button class="btn btn-ghost" onclick="goTab('dashboard')">Skip</button>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="screen">
+    <div class="hd">
+      <div><p class="greet">Good morning</p><h1 class="serif">Hey, Maren</h1></div>
+      <div class="avatar">M</div>
+    </div>
+
+    <div class="card balance-card">
+      <div class="balance-label">TOTAL BALANCE</div>
+      <div class="balance-num serif">$4,812.30</div>
+      <div class="balance-sub">Across 3 accounts</div>
+      <div class="trend up">↑ 6.2% since last month</div>
+    </div>
+
+    <div class="section-title">This week</div>
+    <div class="card">
+      <div class="row"><div class="tx-left"><div class="tx-icon">☕</div><div><p class="tx-name">Fernwood Coffee</p><p class="tx-meta">Today · Food & drink</p></div></div><div class="tx-amt">-$5.40</div></div>
+      <div class="row"><div class="tx-left"><div class="tx-icon">💰</div><div><p class="tx-name">Paycheck</p><p class="tx-meta">Yesterday · Income</p></div></div><div class="tx-amt pos">+$1,940.00</div></div>
+      <div class="row"><div class="tx-left"><div class="tx-icon">🚕</div><div><p class="tx-name">Transit</p><p class="tx-meta">Tue · Transport</p></div></div><div class="tx-amt">-$32.00</div></div>
+      <div class="row"><div class="tx-left"><div class="tx-icon">🛒</div><div><p class="tx-name">Green Grocer</p><p class="tx-meta">Mon · Groceries</p></div></div><div class="tx-amt">-$68.15</div></div>
+    </div>
+
+    <div class="section-title">Flow noticed</div>
+    <div class="insight-note">You've spent 18% less on dining out this week than usual — that's about $34 back toward Emergency Fund.</div>
+  </section>
+
+  <!-- INSIGHTS -->
+  <section id="insights" class="screen">
+    <div class="hd"><h1 class="serif">Spending</h1></div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">Last 6 weeks</div>
+      <div class="bar-wrap">
+        <div class="bar-col"><div class="bar" style="height:52%"></div><div class="bar-lbl">Aug 4</div></div>
+        <div class="bar-col"><div class="bar" style="height:70%"></div><div class="bar-lbl">Aug 11</div></div>
+        <div class="bar-col"><div class="bar" style="height:44%"></div><div class="bar-lbl">Aug 18</div></div>
+        <div class="bar-col"><div class="bar" style="height:85%"></div><div class="bar-lbl">Aug 25</div></div>
+        <div class="bar-col"><div class="bar" style="height:60%"></div><div class="bar-lbl">Sep 1</div></div>
+        <div class="bar-col"><div class="bar active" style="height:38%"></div><div class="bar-lbl">This wk</div></div>
+      </div>
+    </div>
+
+    <div class="section-title">By category</div>
+    <div class="card">
+      <div class="cat-row"><div class="cat-dot" style="background:var(--teal)"></div><div class="cat-name">Housing</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:78%; background:var(--teal)"></div></div><div class="cat-amt">$1,200</div></div>
+      <div class="cat-row"><div class="cat-dot" style="background:var(--gold)"></div><div class="cat-name">Groceries</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:38%; background:var(--gold)"></div></div><div class="cat-amt">$412</div></div>
+      <div class="cat-row"><div class="cat-dot" style="background:#7B9E93"></div><div class="cat-name">Dining out</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:24%; background:#7B9E93"></div></div><div class="cat-amt">$186</div></div>
+      <div class="cat-row"><div class="cat-dot" style="background:#A6432F"></div><div class="cat-name">Subscriptions</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:14%; background:#A6432F"></div></div><div class="cat-amt">$64</div></div>
+    </div>
+
+    <div class="section-title">Flow noticed</div>
+    <div class="insight-note">3 subscriptions haven't been used in 60+ days: Streamly, PulseFit, and CloudNote — together $27.98/mo.</div>
+  </section>
+
+  <!-- GOALS -->
+  <section id="goals" class="screen">
+    <div class="hd"><h1 class="serif">Goals</h1></div>
+
+    <div class="goal-card">
+      <div class="goal-top"><div class="goal-name">Emergency fund</div><div class="goal-pct">62%</div></div>
+      <div class="goal-track"><div class="goal-fill" style="width:62%"></div></div>
+      <div class="goal-nums"><span>$3,100 saved</span><span>Target $5,000</span></div>
+    </div>
+
+    <div class="goal-card">
+      <div class="goal-top"><div class="goal-name">Trip to Lisbon</div><div class="goal-pct">31%</div></div>
+      <div class="goal-track"><div class="goal-fill" style="width:31%"></div></div>
+      <div class="goal-nums"><span>$620 saved</span><span>Target $2,000</span></div>
+    </div>
+
+    <div class="goal-card">
+      <div class="goal-top"><div class="goal-name">Pay off credit card</div><div class="goal-pct">45%</div></div>
+      <div class="goal-track"><div class="goal-fill" style="width:45%"></div></div>
+      <div class="goal-nums"><span>$990 remaining</span><span>Started at $1,800</span></div>
+    </div>
+
+    <div class="add-goal" onclick="alert('In the full product, this opens a new-goal flow.')">+ New goal</div>
+  </section>
+
+  <!-- COACH -->
+  <section id="coach" class="screen">
+    <div class="hd"><h1 class="serif">Coach</h1></div>
+    <div class="chat-wrap" id="chatWrap">
+      <div class="msg bot">Morning, Maren. Dining-out spending is down 18% this week — want me to move the difference into Emergency fund?</div>
+      <div class="suggest-row">
+        <button class="suggest" onclick="coachReply(this,'Yes, move it')">Yes, move it</button>
+        <button class="suggest" onclick="coachReply(this,'Not now')">Not now</button>
+        <button class="suggest" onclick="coachReply(this,'What else changed?')">What else changed?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB BAR -->
+  <nav class="tabbar" id="tabbar" style="display:none;">
+    <button class="tab active" data-tab="dashboard" onclick="goTab('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</button>
+    <button class="tab" data-tab="insights" onclick="goTab('insights')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>Insights</button>
+    <button class="tab" data-tab="goals" onclick="goTab('goals')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Goals</button>
+    <button class="tab" data-tab="coach" onclick="goTab('coach')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013 11.5 8.5 8.5 0 0111.5 3a8.5 8.5 0 019.5 8.5z"/></svg>Coach</button>
+  </nav>
+</div>
+
+<script>
+let obStep = 0;
+document.querySelectorAll('[data-chip]').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('sel')));
+
+document.getElementById('obNext').addEventListener('click', ()=>{
+  if(obStep < 2){
+    document.querySelector(`.ob-step[data-step="${obStep}"]`).classList.remove('active');
+    document.querySelector(`.ob-dot[data-dot="${obStep}"]`).classList.add('done');
+    obStep++;
+    document.querySelector(`.ob-step[data-step="${obStep}"]`).classList.add('active');
+    document.querySelector(`.ob-dot[data-dot="${obStep}"]`).classList.add('done');
+  } else {
+    goTab('dashboard');
+  }
+});
+
+function goTab(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.getElementById('tabbar').style.display = name==='onboarding' ? 'none' : 'flex';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+}
+
+function coachReply(btn, text){
+  const wrap = document.getElementById('chatWrap');
+  btn.parentElement.remove();
+  const u = document.createElement('div'); u.className='msg user'; u.textContent=text; wrap.appendChild(u);
+  setTimeout(()=>{
+    const b = document.createElement('div'); b.className='msg bot';
+    let reply = "Done — $34 is on its way to Emergency fund. You're 62% there.";
+    if(text==='Not now') reply = "No problem, I'll leave it in checking. I'll check back in a week.";
+    if(text==='What else changed?') reply = "Two things: transit spend is up $12 this week, and you haven't used PulseFit in 63 days — still $12.99/mo.";
+    b.textContent = reply; wrap.appendChild(b);
+    wrap.scrollTop = wrap.scrollHeight;
+  }, 500);
+}
+</script>
+</body>
+</html>
